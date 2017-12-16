@@ -1,7 +1,5 @@
 package example.graph_search;
 
-import graph.search.TraverseGraph.TraverseMapper;
-import graph.search.TraverseGraph.TraverseReducer;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -30,7 +28,7 @@ import java.io.IOException;
 
 public class BFSearchDriver extends BaseDriver {
 
-    static class SearchMapperSSSP extends TraverseMapper {
+    static class SearchMapperSSSP extends TraverseGraph.TraverseMapper {
 
         public void map(Object key, Text value, Context context)
                 throws IOException, InterruptedException {
@@ -43,7 +41,7 @@ public class BFSearchDriver extends BaseDriver {
     }
 
 
-    static class SearchReducerSSSP extends TraverseReducer {
+    static class SearchReducerSSSP extends TraverseGraph.TraverseReducer {
 
         // the parameters are the types of the input key, the values associated with
         // the key and the Context object through which the Reducer communicates

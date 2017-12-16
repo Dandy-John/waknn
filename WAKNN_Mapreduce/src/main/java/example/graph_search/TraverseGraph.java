@@ -1,6 +1,5 @@
 package example.graph_search;
 
-import graph.search.Node.Color;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -35,7 +34,7 @@ public class TraverseGraph {
     public static class TraverseMapper extends Mapper<Object, Text, Text, Text> {
         protected void map(Object key, Text value, Context context, Node inNode)
                 throws IOException, InterruptedException {
-            if (inNode.getColor() == Color.GRAY) {
+            if (inNode.getColor() == Node.Color.GRAY) {
                 for (String neighbor : inNode.getEdges()) {
                     Node adjacentNode = new Node();
                     adjacentNode.setId(neighbor);
