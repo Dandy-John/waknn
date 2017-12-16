@@ -51,4 +51,30 @@ public class Document {
     public void setVector(double[] vector) {
         this.vector = vector;
     }
+
+    public double distance(Document document) {
+        if (this.equals(document)) {
+            return 0;
+        }
+        //TODO complmete the cosin distance calculation
+        return -1;
+    }
+
+    public static Document[] getDocumentArr(String docsStr) {
+        String[] docStr = docsStr.split("\n");
+        Document[] documents = new Document[docStr.length];
+        for (int i = 0; i < docStr.length; ++i) {
+            documents[i] = new Document(docStr[i]);
+        }
+        return documents;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (object instanceof Document) {
+            Document document = (Document)object;
+            return this.id == document.id;
+        }
+        return false;
+    }
 }
