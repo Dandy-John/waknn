@@ -1,5 +1,7 @@
 package waknn.entity;
 
+import java.util.Comparator;
+
 public class Document {
     private static int length = -1;
     private int id;
@@ -57,7 +59,7 @@ public class Document {
             return 0;
         }
         //TODO complmete the cosin distance calculation
-        return -1;
+        return document.getId() - this.getId();
     }
 
     public static Document[] getDocumentArr(String docsStr) {
@@ -76,5 +78,33 @@ public class Document {
             return this.id == document.id;
         }
         return false;
+    }
+
+    @Override
+    public String toString() {
+        String str =  "Document {\n\tid = " + id + " label = " + label + "\n\tvector = [";
+        for (double v : vector) {
+            str += v + " ";
+        }
+        str += "]\n}";
+        return str;
+    }
+
+    public class DocumentComparator implements Comparator<Document> {
+        private Document doc;
+
+        public DocumentComparator(Document doc) {
+            this.doc = doc;
+        }
+
+        public int compare(Document o1, Document o2) {
+            double dis1 = doc.distance(o1);
+            double dis2 = doc.distance(o2);
+            return Double.compare(dis1, dis2);
+        }
+    }
+
+    public DocumentComparator getComparator() {
+        return new DocumentComparator(this);
     }
 }
