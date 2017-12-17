@@ -1,5 +1,7 @@
 package waknn.entity;
 
+import org.apache.hadoop.yarn.webapp.hamlet.Hamlet;
+
 import java.util.Comparator;
 
 public class Document {
@@ -48,7 +50,24 @@ public class Document {
             return 0;
         }
         //TODO complmete the cosin distance calculation
-        return document.getId() - this.getId();
+
+        // 用于计算距离的分子和分母
+        double molecular = 0, denominator = 0, temp1 = 0, temp2 = 0;
+        double [] array1 = document.getVector();
+        double [] weightArray = weight.getWeight();
+        for(int i = 0; i < array1.length; i++) {
+            molecular += this.vector[i] * weightArray[i] * array1[i] * weightArray[i];
+            temp1 += Math.pow(this.vector[i] * weightArray[i], 2);
+            temp2 += Math.pow(array1[i] * weightArray[i], 2);
+        }
+
+        denominator = Math.pow(temp1, 0.5) * Math.pow(temp2, 0.5);
+
+        if (denominator !=0 ) {
+            return molecular / denominator;
+        } else {
+            return -1;
+        }
     }
 
     public static Document[] getDocumentArr(String docsStr) {
@@ -57,6 +76,9 @@ public class Document {
         for (int i = 0; i < docStr.length; ++i) {
             documents[i] = new Document(docStr[i]);
         }
+
+
+
         return documents;
     }
 
