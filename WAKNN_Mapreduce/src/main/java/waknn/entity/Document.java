@@ -3,31 +3,20 @@ package waknn.entity;
 import java.util.Comparator;
 
 public class Document {
-    private static int length = -1;
     private int id;
     private String label;
     private double[] vector;
 
     public Document(String input) {
-        if (Document.length == -1) {
-            throw new RuntimeException("length not set.");
-        }
 
         String[] args = input.split(" ");
         this.id = Integer.parseInt(args[0]);
         this.label = args[1];
+        int length = args.length - 2;
         this.vector = new double[length];
         for (int i = 2; i < length + 2; ++i) {
             this.vector[i - 2] = Double.parseDouble(args[i]);
         }
-    }
-
-    public static void setLength(int length) {
-        Document.length = length;
-    }
-
-    public static int getLength() {
-        return Document.length;
     }
 
     public int getId() {

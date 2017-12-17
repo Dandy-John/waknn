@@ -5,6 +5,8 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import waknn.entity.Document;
+import waknn.entity.Weight;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -23,6 +25,7 @@ public class Waknn {
      */
     public static class KNNCalculateMapper extends Mapper<Object, Text, IntWritable, Text> {
         private Document[] documents;
+        private Weight weight;
 
         @Override
         protected void setup(Context context) {
@@ -30,6 +33,8 @@ public class Waknn {
             //读取configuration中存储的共享变量
             String documentsStr = configuration.get("documents");
             this.documents = Document.getDocumentArr(documentsStr);
+            String weightStr = configuration.get("weight");
+            this.weight = new Weight(weightStr);
         }
 
         @Override
