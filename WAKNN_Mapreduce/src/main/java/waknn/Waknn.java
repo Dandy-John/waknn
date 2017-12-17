@@ -9,10 +9,7 @@ import waknn.entity.Document;
 import waknn.entity.Weight;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class Waknn {
 
@@ -79,6 +76,28 @@ public class Waknn {
                 }
             }
             context.write(new IntWritable(document.getId()), new Text(biggestLabel));
+        }
+
+        @Override
+        public void run(Context context) throws IOException, InterruptedException {
+            List<Document> docs = new ArrayList<Document>();
+            List<Object> keys = new ArrayList<Object>();
+            try {
+                while (context.nextKeyValue()) {
+                    Object key = context.getCurrentKey();
+                    keys.add(key);
+                    Text value = context.getCurrentValue();
+                    docs.add(new Document(value.toString()));
+                }
+
+                Configuration conf = context.getConfiguration();
+                conf.set("documents", Document.toString((Document[]) docs.toArray()));
+                for (int i = 0; i < docs.size(); ++i) {
+                    this.map(keys.get(i), new Text(docs.get(i).toString()), context);
+                }
+            } finally {
+                this.cleanup(context);
+            }
         }
     }
 

@@ -78,24 +78,34 @@ public class WordCount {
     }
 
     public static void main(String[] args) throws Exception {
-        /**
-         * Configuration：map/reduce的j配置类，向hadoop框架描述map-reduce执行的工作
-         */
-        Configuration conf =new Configuration();
-        String[] otherArgs =new GenericOptionsParser(conf, args).getRemainingArgs();
-        if (otherArgs.length !=2) {
-            System.err.println("Usage: wordcount <in> <out>");
-            System.exit(2);
-        }
-        Job job =new Job(conf, "word count");    //设置一个用户定义的job名称
+        Configuration conf = new Configuration();  // 这里这么设置就可以了
+
+//        String[] otherArgs = {"hdfs://imageHandler1:9000/tmp/log/test.log", "hdfs://imageHandler1:9000/tmp/testout111"}; // 可以是hdfs上的路径
+
+        String[] otherArgs = {"D:/test.log", "D:/test/wordcountout"}; // 也可以是本地路径
+
+        Job job = Job.getInstance(conf, "word count");
+
         job.setJarByClass(WordCount.class);
-        job.setMapperClass(TokenizerMapper.class);    //为job设置Mapper类
-        job.setCombinerClass(IntSumReducer.class);    //为job设置Combiner类
-        job.setReducerClass(IntSumReducer.class);    //为job设置Reducer类
-        job.setOutputKeyClass(Text.class);        //为job的输出数据设置Key类
-        job.setOutputValueClass(IntWritable.class);    //为job输出设置value类
-        FileInputFormat.addInputPath(job, new Path(otherArgs[0]));    //为job设置输入路径
-        FileOutputFormat.setOutputPath(job, new Path(otherArgs[1]));//为job设置输出路径
-        System.exit(job.waitForCompletion(true) ?0 : 1);        //运行job
+
+        job.setMapperClass(TokenizerMapper.class);
+
+        job.setCombinerClass(IntSumReducer.class);
+
+        job.setReducerClass(IntSumReducer.class);
+
+        job.setOutputKeyClass(Text.class);
+
+        job.setOutputValueClass(IntWritable.class);
+
+        for (int i = 0; i < otherArgs.length - 1; ++i) {
+
+            FileInputFormat.addInputPath(job, new Path(otherArgs[i]));
+
+        }
+
+        FileOutputFormat.setOutputPath(job, new Path(otherArgs[otherArgs.length - 1]));
+
+        System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
 }

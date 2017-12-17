@@ -60,6 +60,14 @@ public class Document {
         return documents;
     }
 
+    public static String toString(Document[] docs) {
+        String str = docs[0].toString();
+        for (int i = 1; i < docs.length; ++i) {
+            str += "\n" + docs[i];
+        }
+        return str;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (object instanceof Document) {
@@ -71,11 +79,10 @@ public class Document {
 
     @Override
     public String toString() {
-        String str =  "Document {\n\tid = " + id + " label = " + label + "\n\tvector = [";
+        String str = String.valueOf(id) + " " + label;
         for (double v : vector) {
-            str += v + " ";
+            str += " " + v;
         }
-        str += "]\n}";
         return str;
     }
 
