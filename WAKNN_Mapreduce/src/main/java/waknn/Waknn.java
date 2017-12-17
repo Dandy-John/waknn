@@ -4,6 +4,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
 import waknn.entity.Document;
 import waknn.entity.Weight;
 
@@ -78,6 +79,22 @@ public class Waknn {
                 }
             }
             context.write(new IntWritable(document.getId()), new Text(biggestLabel));
+        }
+    }
+
+    public static class KNNCalculateReducer extends Reducer<IntWritable, Text, IntWritable, Text> {
+        @Override
+        public void reduce(IntWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+            String value = null;
+            for (Text val : values) {
+                if (value == null) {
+                    value = val.toString();
+                }
+                else if (!value.equals(val.toString())) {
+                    throw new RuntimeException("reduce failed.");
+                }
+            }
+            context.write(key, new Text(value));
         }
     }
 
