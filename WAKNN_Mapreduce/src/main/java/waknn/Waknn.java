@@ -128,8 +128,7 @@ public class Waknn {
         if (otherArgs.length !=2) {
             System.exit(2);
         }
-        String weight = "1 2 3 4 5 6";
-        conf.set("weight", weight);
+        conf.set("weight", Weight.init(100));
 
         Job job = new Job(conf, "WAKNN");
         job.setJarByClass(Waknn.class);
