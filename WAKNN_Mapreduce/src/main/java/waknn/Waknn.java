@@ -55,7 +55,7 @@ public class Waknn {
                     others[i - 1] = documents[i];
                 }
             }
-            Arrays.sort(others, document.getComparator());
+            Arrays.sort(others, document.getComparator(weight));
             Map<String, Integer> K_neighbors = new HashMap<String, Integer>();
             for (int i = 0; i < K; ++i) {
                 Document doc = others[i];

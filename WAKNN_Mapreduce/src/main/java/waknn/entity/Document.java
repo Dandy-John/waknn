@@ -43,7 +43,7 @@ public class Document {
         this.vector = vector;
     }
 
-    public double distance(Document document) {
+    public double distance(Document document, Weight weight) {
         if (this.equals(document)) {
             return 0;
         }
@@ -81,19 +81,21 @@ public class Document {
 
     public class DocumentComparator implements Comparator<Document> {
         private Document doc;
+        private Weight weight;
 
-        public DocumentComparator(Document doc) {
+        public DocumentComparator(Document doc, Weight weight) {
             this.doc = doc;
+            this.weight = weight;
         }
 
         public int compare(Document o1, Document o2) {
-            double dis1 = doc.distance(o1);
-            double dis2 = doc.distance(o2);
+            double dis1 = doc.distance(o1, weight);
+            double dis2 = doc.distance(o2, weight);
             return Double.compare(dis1, dis2);
         }
     }
 
-    public DocumentComparator getComparator() {
-        return new DocumentComparator(this);
+    public DocumentComparator getComparator(Weight weight) {
+        return new DocumentComparator(this, weight);
     }
 }
