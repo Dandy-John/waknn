@@ -49,7 +49,6 @@ public class Document {
         if (this.equals(document)) {
             return 0;
         }
-        //TODO complmete the cosin distance calculation
 
         // 用于计算距离的分子和分母
         double molecular = 0, denominator = 0, temp1 = 0, temp2 = 0;
@@ -82,10 +81,10 @@ public class Document {
         return documents;
     }
 
-    public static String toString(Document[] docs) {
+    public static String toString(Object[] docs) {
         String str = docs[0].toString();
         for (int i = 1; i < docs.length; ++i) {
-            str += "\n" + docs[i];
+            str += "\n" + docs[i].toString();
         }
         return str;
     }

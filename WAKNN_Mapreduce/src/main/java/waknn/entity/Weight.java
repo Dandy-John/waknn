@@ -12,26 +12,28 @@ public class Weight {
         this.weight = weight;
     }
 
-    public static String init(int size) {
+    public static Weight init(int size) {
         String[] word = new String[size];
         double[] weight = new double[size];
         for (int i = 0; i < size; ++i) {
             word[i] = "";
             weight[i] = random.nextDouble();
         }
-        return new Weight(word, weight).toParameter();
+        return new Weight(word, weight);
+    }
+
+    public static double[] getRatio() {
+        double[] result = {0.2, 0.8, 1.5, 2.0, 4.0};
+        return result;
     }
 
     public Weight(String paramStr) {
         String[] params = paramStr.split(" ");
-        int length = params.length / 2;
-        word = new String[length];
-        weight = new double[length];
-        for (int i = 0; i < length; ++i) {
-            word[i] = params[i];
-        }
-        for (int i = length; i < params.length; ++i) {
-            weight[i - length] = Double.parseDouble(params[i]);
+        word = new String[params.length];
+        weight = new double[params.length];
+        for (int i = 0; i < params.length; ++i) {
+            word[i] = " ";
+            weight[i] = Double.parseDouble(params[i]);
         }
     }
 
@@ -47,8 +49,16 @@ public class Weight {
         return weight;
     }
 
+    public double getWeight(int index) {
+        return weight[index];
+    }
+
     public void setWeight(double[] weight) {
         this.weight = weight;
+    }
+
+    public void setWeight(int index, double value) {
+        weight[index] = value;
     }
 
     public String toParameter() {
