@@ -1,20 +1,22 @@
 package waknn;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.*;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 import waknn.entity.Document;
 import waknn.entity.Weight;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.*;
 
 public class Waknn {
@@ -142,6 +144,8 @@ public class Waknn {
         conf.set("weight_attempt", weight.toParameter());
 
         Job job = jobInitialize(conf, "startup", otherArgs[0], otherArgs[1] + "-temp");
+        System.exit(job.waitForCompletion(true) ?0 : 1);
+        /*
         double baseAccuracy = getAccuracy();
 
         for (int i = 0; i < weight.getWeight().length; ++i) {
@@ -162,6 +166,8 @@ public class Waknn {
                 break;
             }
         }
+        */
+        //TODO 求得了调整之后的权重，输出到文件
 
 //        Job job = new Job(conf, "WAKNN");
 //        job.setJarByClass(Waknn.class);
@@ -176,6 +182,7 @@ public class Waknn {
 
     public static Job jobInitialize(Configuration conf, String jobName, String inArg, String outArg) throws IOException {
         Job job = new Job(conf, jobName);
+        job.setJarByClass(Waknn.class);
         job.setMapperClass(Waknn.KNNCalculateMapper.class);
         job.setReducerClass(Waknn.KNNCalculateReducer.class);
         job.setOutputKeyClass(IntWritable.class);
@@ -186,12 +193,30 @@ public class Waknn {
     }
 
     public static double oneAttempt(double baseAccuracy) {
-        //TODO
+        //TODO 使用weight_attempt的权值对训练集中的所有元素进行一次预测，然后算出准确率
         return -1;
     }
 
-    public static double getAccuracy() {
-        //TODO
-        return -1;
+    public static double getAccuracy(Path path, Configuration conf) throws IOException {
+        FileSystem fs = path.getFileSystem(conf);
+        FSDataInputStream in = fs.open(path);
+        BufferedReader br = new BufferedReader(new InputStreamReader(in, "utf-8"));
+        String docsStr = conf.get("documents");
+        Document[] docs = Document.getDocumentArr(docsStr);
+        String line = "";
+        Map<Integer, String> predict = new HashMap<Integer, String>();
+        while ((line = br.readLine()) != null) {
+            String[] args = line.split(" ");
+            int id = Integer.parseInt(args[0]);
+            String label = args[1];
+            predict.put(id, label);
+        }
+        int trueNumber = 0;
+        for (Document doc : docs) {
+            if (doc.getLabel().equals(predict.get(doc.getId()))) {
+                trueNumber++;
+            }
+        }
+        return ((double) trueNumber) / docs.length;
     }
 }
