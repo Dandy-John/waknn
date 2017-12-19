@@ -1,10 +1,7 @@
 package waknn;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.*;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.*;
@@ -159,7 +156,8 @@ public class Waknn {
         */
 //        throw new Exception("documents value: " + conf.get("documents"));
 
-        double baseAccuracy = getAccuracy(new Path(otherArgs[1] + "/temp-0/part-r-00000"), conf, documents);
+//        double baseAccuracy = getAccuracy(new Path(otherArgs[1] + "/temp-0/part-r-00000"), conf, documents);
+        double baseAccuracy = getAccuracy(new Path(otherArgs[1] + "/temp-0"), conf, documents);
 
         int count = 1;
         for (int i = 0; i < weight.getWeight().length; ++i) {
@@ -218,7 +216,8 @@ public class Waknn {
 
         Job job = jobInitialize(conf, "mid-" + count, in, out + "/temp-" + count);
         job.waitForCompletion(true);
-        double accuracy = getAccuracy(new Path(out + "/temp-" + count + "/part-r-00000"), conf, documents);
+//        double accuracy = getAccuracy(new Path(out + "/temp-" + count + "/part-r-00000"), conf, documents);
+        double accuracy = getAccuracy(new Path(out + "/temp-" + count), conf, documents);
         Path outFile = new Path(out + "/temp-" + count + "/result.txt");
         FileSystem fs = outFile.getFileSystem(conf);
         FSDataOutputStream outputStream = fs.create(outFile);
@@ -233,21 +232,38 @@ public class Waknn {
     public static double getAccuracy(Path path, Configuration conf, List<Document> documents) throws Exception {
         //TODO 当前传入的是一个文件，如果不止一个part-r-00000文件，则需要修改为读多个文件内容
         FileSystem fs = path.getFileSystem(conf);
-        FSDataInputStream in = fs.open(path);
-        BufferedReader br = new BufferedReader(new InputStreamReader(in, "utf-8"));
-//        String docsStr = conf.get("documents");
-//        Document[] docs = Document.getDocumentArr(docsStr);
-        String line = "";
+        FileStatus[] fileStatuses = fs.listStatus(path);
+        Path[] paths = FileUtil.stat2Paths(fileStatuses);
+
         Map<Integer, String> predict = new HashMap<Integer, String>();
-        while ((line = br.readLine()) != null) {
-            String[] args = line.split("\t");
-            if (args.length < 2) {
-                throw new Exception(line);
+        for (Path p : paths) {
+            String name = p.getName();
+            if (!name.startsWith("part-r-")) {
+                continue;
             }
-            int id = Integer.parseInt(args[0]);
-            String label = args[1];
-            predict.put(id, label);
+            FSDataInputStream in = fs.open(p);
+            BufferedReader br = new BufferedReader(new InputStreamReader(in, "utf-8"));
+            String line = "";
+            while ((line = br.readLine()) != null) {
+                String[] args = line.split("\t");
+                int id = Integer.parseInt(args[0]);
+                String label = args[1];
+                predict.put(id, label);
+            }
         }
+//        FSDataInputStream in = fs.open(path);
+//        BufferedReader br = new BufferedReader(new InputStreamReader(in, "utf-8"));
+//        String line = "";
+//        Map<Integer, String> predict = new HashMap<Integer, String>();
+//        while ((line = br.readLine()) != null) {
+//            String[] args = line.split("\t");
+//            if (args.length < 2) {
+//                throw new Exception(line);
+//            }
+//            int id = Integer.parseInt(args[0]);
+//            String label = args[1];
+//            predict.put(id, label);
+//        }
         int trueNumber = 0;
         for (Document doc : documents) {
             if (doc.getLabel().equals(predict.get(doc.getId()))) {
