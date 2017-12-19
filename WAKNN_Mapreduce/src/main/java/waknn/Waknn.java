@@ -2,6 +2,7 @@ package waknn;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -14,9 +15,7 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import waknn.entity.Document;
 import waknn.entity.Weight;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.*;
 
 public class Waknn {
@@ -139,15 +138,30 @@ public class Waknn {
         }
 
         Weight weight = Weight.init(100);
+        List<Document> documents = readDocuments(new Path(otherArgs[0]), conf);
         double[] ratio = Weight.getRatio();
         conf.set("weight", weight.toParameter());
         conf.set("weight_attempt", weight.toParameter());
 
-        Job job = jobInitialize(conf, "startup", otherArgs[0], otherArgs[1] + "-temp");
-        System.exit(job.waitForCompletion(true) ?0 : 1);
-        /*
-        double baseAccuracy = getAccuracy();
+        Job job = jobInitialize(conf, "startup", otherArgs[0], otherArgs[1] + "/temp-0");
+        job.waitForCompletion(true);
 
+        /*
+        //测试：输出到文件
+        Path outFile = new Path(otherArgs[1] + "-temp/out.txt");
+        FileSystem fs = outFile.getFileSystem(conf);
+        FSDataOutputStream out = fs.create(outFile);
+        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(out, "utf-8"));
+        bw.write("this is a line of text for test.");
+        bw.close();
+
+        System.exit(result ? 0 : 1);
+        */
+//        throw new Exception("documents value: " + conf.get("documents"));
+
+        double baseAccuracy = getAccuracy(new Path(otherArgs[1] + "/temp-0/part-r-00000"), conf, documents);
+
+        int count = 1;
         for (int i = 0; i < weight.getWeight().length; ++i) {
             mid:
             while (true) {
@@ -155,7 +169,7 @@ public class Waknn {
                     weight.setWeight(i, weight.getWeight(i) * r);
                     conf.set("weight_attempt", weight.toParameter());
                     //使用新的weight进行尝试，得到新的准确率
-                    double accuracy = oneAttempt(baseAccuracy);
+                    double accuracy = oneAttempt(count++, otherArgs[0], otherArgs[1], conf, documents);
                     //若新的准确率高于原准确率，需要调整weight并重新进行所有ratio的尝试
                     if (accuracy > baseAccuracy) {
                         baseAccuracy = accuracy;
@@ -166,7 +180,15 @@ public class Waknn {
                 break;
             }
         }
-        */
+
+        Path outFile = new Path(otherArgs[1] + "/result.txt");
+        FileSystem fs = outFile.getFileSystem(conf);
+        FSDataOutputStream out = fs.create(outFile);
+        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(out, "utf-8"));
+        bw.write("Final weight: " + conf.get("weight") + "\n");
+        bw.write("Final acc: " + baseAccuracy + "\n");
+        bw.close();
+
         //TODO 求得了调整之后的权重，输出到文件
 
 //        Job job = new Job(conf, "WAKNN");
@@ -192,31 +214,56 @@ public class Waknn {
         return job;
     }
 
-    public static double oneAttempt(double baseAccuracy) {
+    public static double oneAttempt(int count, String in, String out, Configuration conf, List<Document> documents) throws Exception {
         //TODO 使用weight_attempt的权值对训练集中的所有元素进行一次预测，然后算出准确率
-        return -1;
+        Job job = jobInitialize(conf, "mid-" + count, in, out + "/temp-" + count);
+        job.waitForCompletion(true);
+        double accuracy = getAccuracy(new Path(out + "/temp-" + count + "/part-r-00000"), conf, documents);
+        Path outFile = new Path(out + "/temp-" + count + "/result.txt");
+        FileSystem fs = outFile.getFileSystem(conf);
+        FSDataOutputStream outputStream = fs.create(outFile);
+        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(outputStream, "utf-8"));
+        bw.write("weight: " + conf.get("weight_attempt") + "\n");
+        bw.write("acc: " + accuracy + "\n");
+        bw.close();
+        return accuracy;
     }
 
-    public static double getAccuracy(Path path, Configuration conf) throws IOException {
+    public static double getAccuracy(Path path, Configuration conf, List<Document> documents) throws Exception {
         FileSystem fs = path.getFileSystem(conf);
         FSDataInputStream in = fs.open(path);
         BufferedReader br = new BufferedReader(new InputStreamReader(in, "utf-8"));
-        String docsStr = conf.get("documents");
-        Document[] docs = Document.getDocumentArr(docsStr);
+//        String docsStr = conf.get("documents");
+//        Document[] docs = Document.getDocumentArr(docsStr);
         String line = "";
         Map<Integer, String> predict = new HashMap<Integer, String>();
         while ((line = br.readLine()) != null) {
-            String[] args = line.split(" ");
+            String[] args = line.split("\t");
+            if (args.length < 2) {
+                throw new Exception(line);
+            }
             int id = Integer.parseInt(args[0]);
             String label = args[1];
             predict.put(id, label);
         }
         int trueNumber = 0;
-        for (Document doc : docs) {
+        for (Document doc : documents) {
             if (doc.getLabel().equals(predict.get(doc.getId()))) {
                 trueNumber++;
             }
         }
-        return ((double) trueNumber) / docs.length;
+        return ((double) trueNumber) / documents.size();
+    }
+
+    public static List<Document> readDocuments(Path path, Configuration conf) throws IOException {
+        List<Document> docs = new ArrayList<Document>();
+        FileSystem fs = path.getFileSystem(conf);
+        FSDataInputStream in = fs.open(path);
+        BufferedReader br = new BufferedReader(new InputStreamReader(in, "utf-8"));
+        String line;
+        while ((line = br.readLine()) != null) {
+            docs.add(new Document(line));
+        }
+        return docs;
     }
 }
