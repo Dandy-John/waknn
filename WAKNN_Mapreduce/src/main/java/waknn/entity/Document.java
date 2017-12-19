@@ -119,7 +119,7 @@ public class Document {
         public int compare(Document o1, Document o2) {
             double dis1 = doc.distance(o1, weight);
             double dis2 = doc.distance(o2, weight);
-            return Double.compare(dis1, dis2);
+            return -Double.compare(dis1, dis2);
         }
     }
 

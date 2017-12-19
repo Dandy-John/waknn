@@ -166,10 +166,11 @@ public class Waknn {
             mid:
             while (true) {
                 for (double r : ratio) {
+                    weight = new Weight(conf.get("weight"));
                     weight.setWeight(i, weight.getWeight(i) * r);
                     conf.set("weight_attempt", weight.toParameter());
                     //使用新的weight进行尝试，得到新的准确率
-                    double accuracy = oneAttempt(count++, otherArgs[0], otherArgs[1], conf, documents);
+                    double accuracy = oneAttempt(count++, i, otherArgs[0], otherArgs[1], conf, documents);
                     //若新的准确率高于原准确率，需要调整weight并重新进行所有ratio的尝试
                     if (accuracy > baseAccuracy) {
                         baseAccuracy = accuracy;
@@ -213,7 +214,7 @@ public class Waknn {
         return job;
     }
 
-    public static double oneAttempt(int count, String in, String out, Configuration conf, List<Document> documents) throws Exception {
+    public static double oneAttempt(int count, int i, String in, String out, Configuration conf, List<Document> documents) throws Exception {
 
         Job job = jobInitialize(conf, "mid-" + count, in, out + "/temp-" + count);
         job.waitForCompletion(true);
@@ -224,6 +225,7 @@ public class Waknn {
         BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(outputStream, "utf-8"));
         bw.write("weight: " + conf.get("weight_attempt") + "\n");
         bw.write("acc: " + accuracy + "\n");
+        bw.write("adjusting weight: " + i + "\n");
         bw.close();
         return accuracy;
     }
