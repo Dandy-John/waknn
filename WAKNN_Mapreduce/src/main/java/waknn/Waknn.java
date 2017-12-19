@@ -189,7 +189,6 @@ public class Waknn {
         bw.write("Final acc: " + baseAccuracy + "\n");
         bw.close();
 
-        //TODO 求得了调整之后的权重，输出到文件
 
 //        Job job = new Job(conf, "WAKNN");
 //        job.setJarByClass(Waknn.class);
@@ -215,7 +214,7 @@ public class Waknn {
     }
 
     public static double oneAttempt(int count, String in, String out, Configuration conf, List<Document> documents) throws Exception {
-        //TODO 使用weight_attempt的权值对训练集中的所有元素进行一次预测，然后算出准确率
+
         Job job = jobInitialize(conf, "mid-" + count, in, out + "/temp-" + count);
         job.waitForCompletion(true);
         double accuracy = getAccuracy(new Path(out + "/temp-" + count + "/part-r-00000"), conf, documents);
@@ -230,6 +229,7 @@ public class Waknn {
     }
 
     public static double getAccuracy(Path path, Configuration conf, List<Document> documents) throws Exception {
+        //TODO 当前传入的是一个文件，如果不止一个part-r-00000文件，则需要修改为读多个文件内容
         FileSystem fs = path.getFileSystem(conf);
         FSDataInputStream in = fs.open(path);
         BufferedReader br = new BufferedReader(new InputStreamReader(in, "utf-8"));
