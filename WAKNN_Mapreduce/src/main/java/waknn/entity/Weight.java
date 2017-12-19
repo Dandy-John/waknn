@@ -17,7 +17,8 @@ public class Weight {
         double[] weight = new double[size];
         for (int i = 0; i < size; ++i) {
             word[i] = "";
-            weight[i] = random.nextDouble();
+//            weight[i] = random.nextDouble();
+            weight[i] = 1;
         }
         return new Weight(word, weight);
     }
