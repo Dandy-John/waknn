@@ -130,11 +130,11 @@ public class Waknn {
     public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();
         String[] otherArgs =new GenericOptionsParser(conf, args).getRemainingArgs();
-        if (otherArgs.length !=2) {
+        if (otherArgs.length !=3) {
             System.exit(2);
         }
 
-        Weight weight = Weight.init(100);
+        Weight weight = Weight.init(Integer.parseInt(otherArgs[3]));
         List<Document> documents = readDocuments(new Path(otherArgs[0]), conf);
         double[] ratio = Weight.getRatio();
         conf.set("weight", weight.toParameter());
