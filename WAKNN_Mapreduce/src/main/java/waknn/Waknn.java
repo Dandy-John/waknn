@@ -134,7 +134,7 @@ public class Waknn {
             System.exit(2);
         }
 
-        Weight weight = Weight.init(Integer.parseInt(otherArgs[3]));
+        Weight weight = Weight.init(Integer.parseInt(otherArgs[2]));
         List<Document> documents = readDocuments(new Path(otherArgs[0]), conf);
         double[] ratio = Weight.getRatio();
         conf.set("weight", weight.toParameter());
